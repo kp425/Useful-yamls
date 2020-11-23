@@ -1,0 +1,63 @@
+# Ngork url will look like tcp://2.tcp.ngrok.io:17267
+
+# Mongo url should look like mongodb://username:password@2.tcp.ngrok.io:17267
+
+# Get the Ngork auth key by signing up and pass the environment variable
+
+version: "3.3"
+services:
+
+  my-mongo-db:
+    image: mongo:4.0.21
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    ports:
+      - 27017:27017
+    networks: 
+      - backend
+    volumes: 
+      - type: volume
+        source: db-data
+        target: /data/db
+        read_only: false
+        volume:
+          nocopy: true
+
+  my-mongo-express:
+    image: mongo-express:0.54.0
+    restart: always
+    ports:
+      - 8081:8081
+    networks: 
+      - backend
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: example
+      ME_CONFIG_MONGODB_SERVER: my-mongo-db
+
+  ngrok:
+    image: wernight/ngrok
+    restart: always
+    
+    ports:
+      - 4040:4040
+    
+    environment:
+      NGROK_PORT: host.docker.internal:27017
+      NGROK_AUTH: #YOUR_AUTH_KEY
+      NGROK_PROTOCOL: TCP
+    
+    networks: 
+      - backend
+    depends_on:
+      - my-mongo-db
+    
+networks:
+  # frontend:
+  backend:
+
+volumes:
+  db-data:
+
